@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { PaginationDto } from 'src/common/dto';
+import { retry } from 'rxjs';
 
-@Controller('product')
+@Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
@@ -13,8 +15,8 @@ export class ProductController {
   }
 
   @Get()
-  findAll() {
-    return this.productService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.productService.findAll(paginationDto);
   }
 
   @Get(':id')
@@ -23,8 +25,9 @@ export class ProductController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productService.update(+id, updateProductDto);
+  update(@Param('id',ParseIntPipe) id: number, @Body() updateProductDto: UpdateProductDto, @Query() queryParams: any) {
+    
+    return this.productService.update(id, updateProductDto);
   }
 
   @Delete(':id')

@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaClient } from '../../generated/prisma';
+import { PaginationDto } from 'src/common/dto';
 
 @Injectable()
 export class ProductService extends PrismaClient implements OnModuleInit{
@@ -13,19 +14,64 @@ export class ProductService extends PrismaClient implements OnModuleInit{
       this.logger.log('DB connected');
   }
   create(createProductDto: CreateProductDto) {
-    return 'This action adds a new product';
+    return this.product.create({
+      data: createProductDto
+    });
   }
 
-  findAll() {
-    return `This action returns all product`;
+ async findAll( paginationDto: PaginationDto ) {
+
+  const { page = 1, limit = 10 } = paginationDto;  
+
+  const totalItems = await this.product.count();
+
+  const lastPage = Math.ceil(totalItems / limit);
+
+  return {
+      data: await this.product.findMany({
+        skip: ( page - 1 ) * limit,
+        take: limit
+      }),
+      meta: {
+        total: totalItems,
+        page: page,
+        lastPage: lastPage,
+      }
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async findOne(id: number) {
+    const product = await this.product.findUnique({
+      where: { id }
+    });
+    
+
+    if ( !product ) {
+      return {
+        message: `Product with id ${id} not found`
+      }
+    }
+
+    return product;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+   async update(id: number, updateProductDto: UpdateProductDto) {
+
+    const existingProduct = await this.product.findUnique({
+      where: { id }
+    });
+
+    if (!existingProduct) {
+      return {
+        message: `Product with id ${id} not found, cannot update`
+      };
+    }
+
+    return this.product.update({
+      where: { id },
+      data: updateProductDto,
+    });
+
   }
 
   remove(id: number) {
