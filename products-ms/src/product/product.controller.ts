@@ -3,7 +3,6 @@ import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PaginationDto } from 'src/common/dto';
-import { retry } from 'rxjs';
 
 @Controller('products')
 export class ProductController {
@@ -31,7 +30,7 @@ export class ProductController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productService.remove(+id);
+  remove(@Param('id',ParseIntPipe) id: number) {
+    return this.productService.remove(id);
   }
 }
